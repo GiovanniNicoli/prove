@@ -589,12 +589,99 @@ button{
    CONFIGURAZIONE
 ============================================================ */
 
-const API_URL =
-"https://script.google.com/macros/s/AKfycbzUmZQupyCwisYTcnH_pGamYMNDXrZvAjDa8GPPpffK3ojpYNvmYgaqcn_lhfE-0UnSlw/exec";
+/* ============================================================
+   PAROLE GIORNALIERE
+
+   Per aggiungere una parola:
+   - copia un blocco;
+   - cambia giorno, data, parola e spiegazione;
+   - lascia la virgola tra un blocco e il successivo.
+============================================================ */
+
+const PAROLE_GIORNALIERE = [
+
+    {
+        giorno: 1,
+        data: "2026-08-10",
+        parola: "siamo",
+        spiegazione: "SIAMO: all'interno delle nostre chat abbiamo usato la prima persona plurale 1267 volte (siamo, abbiamo, andiamo, vediamo, facciamo). Tantissime! Forse non sappiamo ancora cosa SIAMO, ma sicuramente le cose che facciamo insieme ci vengono bene."
+    },
+
+    {
+        giorno: 2,
+        data: "2026-08-11",
+        parola: "baciami",
+        spiegazione: "BACIAMI: E' il titolo della canzone di Fulminacci che ascolto in loop da inizio giugno e non c'è bisogno di dirlo mi fa tanto pensare a te. La parola di oggi è un link alla canzone."
+    },
+
+    {
+        giorno: 3,
+        data: "2026-08-12",
+        parola: "grazie",
+        spiegazione: "GRAZIE: Guardando alle parole che usiamo nelle nostre chat, GRAZIE è la prima che compare in termini di frequenza di utilizzo che abbia un significato (escludiamo articoli, preposizioni, ausiliari...). In questi 3 anni ci siamo scambiati più di 179 mila parole e, tra queste, ci siamo scambiati 228 GRAZIE. GRAZIE che ci sei e grazie alle traiettorie del tempo che ci hanno fatto trovare."
+    },
+
+    {
+        giorno: 4,
+        data: "2026-08-13",
+        parola: "vuoto",
+        spiegazione: "VUOTO: ciò che mi rimane del quarto periodo della semifinale play-off della promozione femminile. Ricordo solo le nostre mani che si incontrano, il cuore che batte fortissimo, gli sguardi che si incrociano, un sospiro."
+    },
+
+    {
+        giorno: 5,
+        data: "2026-08-14",
+        parola: "pulce",
+        spiegazione: "PULCE: rifugio felice dei pensieri. Pulce, stai attento! I am seriously aiming at your job!"
+    },
+	
+	{
+        giorno: 6,
+        data: "2026-08-15",
+        parola: "domani",
+        spiegazione: "DOMANI: in tre anni ci siamo scritti la parola domani 302 volte. Ora, facendo una stima abbastanza grossolana e ipotizzando che in qualche occasione abbiamo usato la parola domani più volte all'interno dello stesso giorno, possiamo dire che per 250 volte ci siamo dati appuntamento al giorno successivo e quindi abbiamo rivolto un pensiero all'altro in almeno 500 giorni su 1051(sicuramente una stima in difetto)! Non vedo l'ora di conoscere cosa ci sarà domani per noi"
+    },
+	
+	{
+        giorno: 7,
+        data: "2026-08-16",
+        parola: "magma",
+        spiegazione: ""
+    },
+	
+	{
+        giorno: 8,
+        data: "2026-08-17",
+        parola: "magia",
+        spiegazione: "MAGIA: can you feel the magic?  "
+    },
+	
+	{
+        giorno: 9,
+        data: "2026-08-18",
+        parola: "salto",
+        spiegazione: "SALTO: c'è un episodio in How I Met Your Mother -The Leap- E24S4, -Il salto-. <<Ascolta il mondo quello che ti dice di fare e prendi il salto!>>. Ad un certo punto per quanto in alto ci si arrampichi lungo la scala, l'ultimo passo deve essere un salto nel vuoto, senza paracadute, senza la sicurezza di atterrare al sicuro. A leap of faith! Terrore, vertigine.  AC Newman - Prophets la canzone che ho ascoltato a lungo prima di prendere il mio salto."
+    },
+	
+	{
+        giorno: 10,
+        data: "2026-08-19",
+        parola: "fondo",
+        spiegazione: "Inserisci qui la spiegazione."
+    },
+	
+	{
+        giorno: 11,
+        data: "2026-08-20",
+        parola: "aperto",
+        spiegazione: "Inserisci qui la spiegazione."
+    }
+
+];
 
 const MAX_TENTATIVI = 6;
 
-const SOLUZIONE_DELAY = 5000;
+const SOLUZIONE_DELAY = 2000;
 
 
 /* ============================================================
@@ -789,63 +876,7 @@ function goToDashboard(){
    API
 ============================================================ */
 
-async function apiRequest(azione,parametri){
-    const url =
-    new URL(API_URL);
 
-    url.searchParams.set(
-        "azione",
-        azione
-    );
-
-    Object
-    .entries(parametri || {})
-    .forEach(
-        ([chiave,valore]) => {
-
-        if(
-            valore !== undefined &&
-            valore !== null &&
-            valore !== ""
-        ){
-            url.searchParams.set(
-                chiave,
-                valore
-            );
-        }
-
-    });
-
-    url.searchParams.set(
-        "nocache",
-        Date.now()
-    );
-
-    const response =
-    await fetch(
-        url.toString(),
-        {
-            cache:"no-store"
-        }
-    );
-
-    if(!response.ok){
-        throw new Error(
-            "Errore di collegamento"
-        );
-    }
-
-    const data =
-    await response.json();
-
-    if(data && data.errore){
-        throw new Error(
-            data.errore
-        );
-    }
-
-    return data;
-}
 
 
 /* ============================================================
@@ -929,37 +960,22 @@ async function showDashboard(){
 }
 
 
-async function loadDays(){
-    const data =
-    await apiRequest(
-        "lista"
-    );
+function loadDays(){
 
-    const elenco =
-    Array.isArray(data)
-    ? data
-    : (
-        data.giorni ||
-        data.elenco ||
-        data.data ||
-        []
-    );
+    /*
+       Creiamo una nuova copia dei dati locali.
 
-    if(!Array.isArray(elenco)){
-        throw new Error(
-            "Elenco giorni non valido"
-        );
-    }
+       In questo modo listaGiorni viene ricostruita
+       ogni volta che apriamo la dashboard.
+    */
 
     listaGiorni =
-    elenco.map(
-        (giorno,index) => {
+    PAROLE_GIORNALIERE.map(
 
-        return {
+        giorno => ({
+
             giorno:
-            giorno.giorno !== undefined
-            ? giorno.giorno
-            : index + 1,
+            giorno.giorno,
 
             data:
             String(
@@ -968,66 +984,25 @@ async function loadDays(){
             .substring(0,10),
 
             lunghezza:
-            Number(
-                giorno.lunghezza || 0
+            normalizzaParola(
+                giorno.parola
+            )
+            .length,
+
+            parola:
+            normalizzaParola(
+                giorno.parola
             ),
 
-            parola:"",
-            spiegazione:""
-        };
-
-    });
-
-    const oggi =
-    getLocalDateString();
-
-    /*
-       Recuperiamo parola e spiegazione esclusivamente
-       per i giorni già trascorsi.
-    */
-
-    await Promise.all(
-        listaGiorni.map(
-            async giorno => {
-
-            if(
-                !giorno.data ||
-                giorno.data >= oggi
-            ){
-                return;
-            }
-
-            try{
-                const dettaglio =
-                await apiRequest(
-                    "target",
-                    {
-                        data:
-                        giorno.data
-                    }
-                );
-
-                giorno.parola =
-                normalizzaParola(
-                    dettaglio.parola
-                );
-
-                giorno.spiegazione =
-                String(
-                    dettaglio.spiegazione
-                    || ""
-                );
-            }
-            catch(error){
-                console.warn(
-                    "Dettagli non disponibili:",
-                    giorno.data,
-                    error
-                );
-            }
+            spiegazione:
+            String(
+                giorno.spiegazione || ""
+            )
 
         })
+
     );
+
 }
 
 
@@ -1066,21 +1041,25 @@ function renderDays(){
             String(giorno.giorno)
         );
 
-        const parolaVisibile =
-        completata
-        ? normalizzaParola(
-            completata.parola
-        )
-        : giorno.parola;
+        /*
+   Parola e spiegazione arrivano sempre
+   dall'ultima lettura del documento Google.
 
-        const spiegazioneVisibile =
-        completata
-        ? String(
-            completata.spiegazione
-            || ""
-        )
-        : giorno.spiegazione;
+   localStorage stabilisce soltanto se
+   il giorno corrente è stato completato.
+*/
 
+const parolaVisibile =
+normalizzaParola(
+    giorno.parola
+);
+
+
+const spiegazioneVisibile =
+String(
+    giorno.spiegazione
+    || ""
+);
         const card =
         document.createElement(
             "div"
@@ -1147,6 +1126,168 @@ function renderDays(){
     });
 }
 
+function renderDays(){
+
+    const grid =
+    document
+    .getElementById("wordsGrid");
+
+
+    grid.innerHTML = "";
+
+
+    const completate =
+    getCompleted();
+
+
+    const oggi =
+    getLocalDateString();
+
+
+    listaGiorni.forEach(
+
+        giorno => {
+
+
+        const completata =
+        completate.some(
+
+            item =>
+
+            String(item.giorno) ===
+            String(giorno.giorno)
+
+        );
+
+
+        /*
+           I giorni precedenti sono sempre visibili.
+
+           Il giorno corrente è visibile soltanto
+           dopo il completamento.
+
+           I giorni futuri rimangono nascosti.
+        */
+
+        const giornoPrecedente =
+
+        giorno.data
+
+        &&
+
+        giorno.data < oggi;
+
+
+        const giornoCorrenteCompletato =
+
+        giorno.data === oggi
+
+        &&
+
+        completata;
+
+
+        const sbloccata =
+
+        giornoPrecedente
+
+        ||
+
+        giornoCorrenteCompletato;
+
+
+        const card =
+        document.createElement(
+            "div"
+        );
+
+
+        card.className =
+        "word-card";
+
+
+        if(sbloccata){
+
+            card.innerHTML = `
+
+                <div class="flash-inner">
+
+                    <div class="flash-front">
+
+                        ${escapeHtml(
+                            giorno.parola
+                        ).toUpperCase()}
+
+                    </div>
+
+
+                    <div class="flash-back">
+
+                        ${escapeHtml(
+
+                            giorno.spiegazione
+
+                            ||
+
+                            "Nessuna spiegazione disponibile."
+
+                        )}
+
+                    </div>
+
+                </div>
+
+            `;
+
+
+            card.addEventListener(
+
+                "click",
+
+                function(){
+
+                    card.classList.toggle(
+                        "open"
+                    );
+
+                }
+
+            );
+
+        }
+
+        else{
+
+            card.classList.add(
+                "locked"
+            );
+
+
+            card.innerHTML = `
+
+                <div class="locked-title">
+
+                    Parola giorno
+
+                    ${escapeHtml(
+                        String(giorno.giorno)
+                    )}
+
+                </div>
+
+            `;
+
+        }
+
+
+        grid.appendChild(
+            card
+        );
+
+    });
+
+}
+
 
 function escapeHtml(value){
     return String(value || "")
@@ -1164,10 +1305,34 @@ function escapeHtml(value){
 
 async function goToToday(){
     try{
-        const data =
-        await apiRequest(
-            "target"
-        );
+        const oggi =
+getLocalDateString();
+
+
+const data =
+PAROLE_GIORNALIERE.find(
+
+    giorno =>
+
+    String(giorno.data)
+    .substring(0,10)
+
+    ===
+
+    oggi
+
+);
+
+
+if(!data){
+
+    alert(
+        "Non è stata configurata una parola per oggi."
+    );
+
+    return;
+
+}
 
         target =
         normalizzaParola(
@@ -1916,15 +2081,19 @@ function salvaParola(){
         return;
     }
 
-    completate.push({
-        giorno:
-        giorno.giorno,
+    /*
+   Salviamo soltanto che la giornata
+   è stata completata.
 
-        parola:
-        target,
+   Parola e spiegazione verranno sempre
+   rilette dal documento Google.
+*/
 
-        spiegazione:
-        spiegazione
+completate.push({
+
+    giorno:
+    giorno.giorno
+
     });
 
     localStorage.setItem(
